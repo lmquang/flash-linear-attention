@@ -60,7 +60,9 @@ def chunk_quasar_fwd(
     # lambda = ||k||^2
     k_norm_sq = (k_chunks ** 2).sum(dim=-1, keepdim=True)  # [B, H, NT, BT, 1]
     eps = 1e-8
-    alpha = (1 - torch.exp(-beta.view(-1, 1, 1, 1) * k_norm_sq)) / (k_norm_sq + eps)  # [B, H, NT, BT, 1]
+    # beta is of shape [H], so expand to [B, H, NT, BT, 1]
+    beta_expanded = beta.view(1, H, 1, 1, 1).expand(B, H, NT, BT, 1)  # [B, H, NT, BT, 1]
+    alpha = (1 - torch.exp(-beta_expanded * k_norm_sq)) / (k_norm_sq + eps)  # [B, H, NT, BT, 1]
     
     # KK^T = K @ K^T for all chunks
     KK_t = torch.matmul(k_chunks, k_chunks.transpose(-2, -1))  # [B, H, NT, BT, BT]
